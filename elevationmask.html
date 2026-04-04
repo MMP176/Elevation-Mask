@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rising Tide</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #0a0e14;
+    color: #e0e4ea;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #map {
+    width: 100%;
+    height: 100vh;
+    z-index: 1;
+  }
+
+  .leaflet-control-zoom { display: none; }
+
+  .control-panel {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: rgba(10, 14, 20, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    min-width: 720px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  .control-label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    white-space: nowrap;
+  }
+
+  .slider-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3b9eff;
+    border: 2px solid #0a0e14;
+    box-shadow: 0 0 12px rgba(59, 158, 255, 0.4);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3b9eff;
+    border: 2px solid #0a0e14;
+    box-shadow: 0 0 12px rgba(59, 158, 255, 0.4);
+    cursor: pointer;
+  }
+
+  .altitude-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 500;
+    color: #3b9eff;
+    min-width: 110px;
+    text-align: right;
+    line-height: 1;
+  }
+
+  .altitude-display span {
+    font-size: 14px;
+    color: rgba(59, 158, 255, 0.6);
+    margin-left: 4px;
+  }
+
+  .title-block {
+    position: fixed;
+    top: 1.5rem;
+    left: 1.5rem;
+    z-index: 1000;
+  }
+
+  .title-block h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .title-block p {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .info-badge {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 1000;
+    background: rgba(10, 14, 20, 0.75);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.35);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3b9eff;
+    opacity: 0.7;
+  }
+
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: #0a0e14;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+    transition: opacity 0.6s ease;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .loading-text {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.3);
+    letter-spacing: 0.05em;
+  }
+
+  .pulse-ring {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(59, 158, 255, 0.3);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(0.9); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 1; }
+  }
+
+  .leaflet-tile-pane { }
+
+  .landmarks {
+    position: relative;
+    height: 18px;
+    margin-top: 2px;
+  }
+
+  .landmark-tick {
+    position: absolute;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .landmark-tick .tick-line {
+    width: 1px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .landmark-tick .tick-label {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.25);
+    white-space: nowrap;
+    letter-spacing: 0.03em;
+    margin-top: 1px;
+  }
+
+  .landmark-tick:hover .tick-label {
+    color: rgba(59, 158, 255, 0.8);
+  }
+
+  .landmark-tooltip {
+    position: fixed;
+    z-index: 2000;
+    background: rgba(10, 14, 20, 0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(59, 158, 255, 0.2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+
+  .landmark-tooltip.visible { opacity: 1; }
+
+  .divider {
+    width: 1px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+  }
+
+  .opacity-slider-wrap {
+    width: 80px;
+    flex-shrink: 0;
+  }
+
+  .opacity-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.5);
+    min-width: 52px;
+    text-align: right;
+    line-height: 1;
+  }
+
+  .opacity-display span {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.25);
+    margin-left: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="pulse-ring"></div>
+  <div class="loading-text">Loading elevation data...</div>
+</div>
+
+<div class="title-block">
+  <h1>Rising Tide</h1>
+  <p>Sea level rise visualizer · 0–8,848m</p>
+</div>
+
+<div class="info-badge">
+  <div class="dot"></div>
+  Shaded areas below threshold
+</div>
+
+<div id="map"></div>
+
+<div class="control-panel">
+  <div class="control-label">Sea level</div>
+  <div class="slider-group">
+    <div class="slider-row">
+      <input type="range" id="altitude-slider" min="0" max="1000" value="100" step="1" />
+    </div>
+    <div class="landmarks" id="landmarks"></div>
+  </div>
+  <div class="altitude-display" id="altitude-value">10<span>m</span></div>
+  <div class="divider"></div>
+  <div class="control-label">Opacity</div>
+  <div class="opacity-slider-wrap">
+    <input type="range" id="opacity-slider" min="0" max="100" value="100" step="1" />
+  </div>
+  <div class="opacity-display" id="opacity-value">100<span>%</span></div>
+</div>
+
+<div class="landmark-tooltip" id="landmark-tooltip"></div>
+
+<script>
+const map = L.map('map', {
+  center: [51.505, -0.09],
+  zoom: 5,
+  zoomControl: false,
+  attributionControl: false
+});
+
+L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+  maxZoom: 14,
+  attribution: '&copy; OpenStreetMap &copy; OpenTopoMap',
+  subdomains: 'abc'
+}).addTo(map);
+
+L.control.attribution({ position: 'bottomright', prefix: false }).addTo(map);
+
+let currentAltitude = 10;
+let opacityMultiplier = 1.0;
+const tileCache = new Map();
+
+const MAX_ALT = 8848;
+const LOG_MAX = Math.log(MAX_ALT + 1);
+
+function sliderToAltitude(v) {
+  if (v === 0) return 0;
+  return Math.round(Math.exp((v / 1000) * LOG_MAX) - 1);
+}
+
+function altitudeToSlider(a) {
+  if (a <= 0) return 0;
+  return Math.round((Math.log(a + 1) / LOG_MAX) * 1000);
+}
+
+const landmarks = [
+  { alt: 2, label: '2m', desc: 'Worst-case 2100 sea rise' },
+  { alt: 10, label: '10m', desc: 'All ice sheets melt (partial)' },
+  { alt: 70, label: '70m', desc: 'All ice on Earth melts' },
+  { alt: 200, label: '200m', desc: 'Cretaceous sea levels' },
+  { alt: 1000, label: '1km', desc: 'Low-lying cities gone' },
+  { alt: 2500, label: '2.5km', desc: 'Most cities submerged' },
+  { alt: 4808, label: '4808m', desc: 'Mont Blanc summit' },
+  { alt: 8848, label: '8848m', desc: 'Everest summit — total submersion' },
+];
+
+function renderLandmarks() {
+  const container = document.getElementById('landmarks');
+  landmarks.forEach(lm => {
+    const pct = (altitudeToSlider(lm.alt) / 1000) * 100;
+    const tick = document.createElement('div');
+    tick.className = 'landmark-tick';
+    tick.style.left = pct + '%';
+    tick.innerHTML = `<div class="tick-line"></div><div class="tick-label">${lm.label}</div>`;
+    tick.addEventListener('click', () => {
+      const sv = altitudeToSlider(lm.alt);
+      slider.value = sv;
+      updateFromSlider(sv);
+    });
+    tick.addEventListener('mouseenter', (e) => {
+      const tooltip = document.getElementById('landmark-tooltip');
+      tooltip.textContent = `${lm.label} — ${lm.desc}`;
+      tooltip.classList.add('visible');
+      const rect = tick.getBoundingClientRect();
+      tooltip.style.left = rect.left + 'px';
+      tooltip.style.top = (rect.top - 36) + 'px';
+    });
+    tick.addEventListener('mouseleave', () => {
+      document.getElementById('landmark-tooltip').classList.remove('visible');
+    });
+    container.appendChild(tick);
+  });
+}
+
+const ElevationOverlay = L.GridLayer.extend({
+  createTile: function(coords, done) {
+    const tile = document.createElement('canvas');
+    const size = this.getTileSize();
+    tile.width = size.x;
+    tile.height = size.y;
+
+    const key = `${coords.z}/${coords.x}/${coords.y}`;
+    const ctx = tile.getContext('2d');
+
+    if (tileCache.has(key)) {
+      renderElevation(ctx, tileCache.get(key), size.x, size.y, currentAltitude);
+      done(null, tile);
+      return tile;
+    }
+
+    const url = `https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${coords.z}/${coords.x}/${coords.y}.png`;
+
+    function loadTile(retries) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        try {
+          const offscreen = document.createElement('canvas');
+          offscreen.width = size.x;
+          offscreen.height = size.y;
+          const offCtx = offscreen.getContext('2d');
+          offCtx.drawImage(img, 0, 0, size.x, size.y);
+          const imageData = offCtx.getImageData(0, 0, size.x, size.y);
+          tileCache.set(key, imageData);
+          renderElevation(ctx, imageData, size.x, size.y, currentAltitude);
+        } catch(e) {}
+        done(null, tile);
+      };
+      img.onerror = function() {
+        if (retries > 0) {
+          setTimeout(() => loadTile(retries - 1), 300 + Math.random() * 500);
+        } else {
+          done(null, tile);
+        }
+      };
+      img.src = url;
+    }
+
+    loadTile(3);
+    return tile;
+  }
+});
+
+function renderElevation(ctx, imageData, w, h, threshold) {
+  const data = imageData.data;
+  const output = ctx.createImageData(w, h);
+  const out = output.data;
+  const logThresh = threshold > 0 ? Math.log(threshold + 1) : 1;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const elevation = (r * 256 + g + b / 256) - 32768;
+
+    if (elevation <= threshold && elevation > -500) {
+      const diff = threshold - elevation;
+      const depth = Math.min(Math.log(diff + 1) / logThresh, 1);
+      const alpha = (0.3 + depth * 0.55) * opacityMultiplier;
+      out[i] = Math.round(8 + depth * 25);
+      out[i + 1] = Math.round(60 + (1 - depth) * 80);
+      out[i + 2] = Math.round(160 + (1 - depth) * 70);
+      out[i + 3] = Math.round(alpha * 255);
+    } else {
+      out[i + 3] = 0;
+    }
+  }
+  ctx.putImageData(output, 0, 0);
+}
+
+const elevationLayer = new ElevationOverlay({
+  opacity: 1,
+  maxZoom: 14,
+  tileSize: 256,
+  keepBuffer: 4,
+  updateWhenIdle: false,
+  updateWhenZooming: false
+}).addTo(map);
+
+map.on('moveend', function() {
+  setTimeout(() => elevationLayer.redraw(), 200);
+});
+
+const slider = document.getElementById('altitude-slider');
+const display = document.getElementById('altitude-value');
+slider.value = altitudeToSlider(10);
+
+function formatAlt(m) {
+  if (m >= 1000) return (m / 1000).toFixed(1).replace(/\.0$/, '') + '<span>km</span>';
+  return m + '<span>m</span>';
+}
+
+function updateFromSlider(val) {
+  const alt = sliderToAltitude(val);
+  display.innerHTML = formatAlt(alt);
+  currentAltitude = alt;
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    elevationLayer.redraw();
+  }, 80);
+}
+
+let debounceTimer;
+slider.addEventListener('input', function() {
+  updateFromSlider(parseInt(this.value));
+});
+
+renderLandmarks();
+
+const opacitySlider = document.getElementById('opacity-slider');
+const opacityDisplay = document.getElementById('opacity-value');
+
+opacitySlider.addEventListener('input', function() {
+  const val = parseInt(this.value);
+  opacityDisplay.innerHTML = `${val}<span>%</span>`;
+  opacityMultiplier = val / 100;
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    elevationLayer.redraw();
+  }, 80);
+});
+
+map.whenReady(() => {
+  setTimeout(() => {
+    document.getElementById('loading').classList.add('hidden');
+  }, 1500);
+});
+</script>
+</body>
+</html>
