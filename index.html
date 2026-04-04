@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Elevation Mask</title>
+<title>Rising Tide</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
@@ -397,6 +397,8 @@ function renderLandmarks() {
   });
 }
 
+const activeTiles = new Map();
+
 const ElevationOverlay = L.GridLayer.extend({
   createTile: function(coords, done) {
     const tile = document.createElement('canvas');
@@ -407,8 +409,12 @@ const ElevationOverlay = L.GridLayer.extend({
     const key = `${coords.z}/${coords.x}/${coords.y}`;
     const ctx = tile.getContext('2d');
 
+    const tileEntry = { ctx, w: size.x, h: size.y, data: null };
+
     if (tileCache.has(key)) {
-      renderElevation(ctx, tileCache.get(key), size.x, size.y, currentAltitude);
+      tileEntry.data = tileCache.get(key);
+      activeTiles.set(tile, tileEntry);
+      renderElevation(ctx, tileEntry.data, size.x, size.y, currentAltitude);
       done(null, tile);
       return tile;
     }
@@ -427,6 +433,8 @@ const ElevationOverlay = L.GridLayer.extend({
           offCtx.drawImage(img, 0, 0, size.x, size.y);
           const imageData = offCtx.getImageData(0, 0, size.x, size.y);
           tileCache.set(key, imageData);
+          tileEntry.data = imageData;
+          activeTiles.set(tile, tileEntry);
           renderElevation(ctx, imageData, size.x, size.y, currentAltitude);
         } catch(e) {}
         done(null, tile);
@@ -443,8 +451,24 @@ const ElevationOverlay = L.GridLayer.extend({
 
     loadTile(3);
     return tile;
+  },
+
+  _removeTile: function(key) {
+    const tile = this._tiles[key];
+    if (tile && tile.el) {
+      activeTiles.delete(tile.el);
+    }
+    L.GridLayer.prototype._removeTile.call(this, key);
   }
 });
+
+function repaintAllTiles() {
+  activeTiles.forEach((entry) => {
+    if (entry.data) {
+      renderElevation(entry.ctx, entry.data, entry.w, entry.h, currentAltitude);
+    }
+  });
+}
 
 function renderElevation(ctx, imageData, w, h, threshold) {
   const data = imageData.data;
@@ -477,14 +501,10 @@ const elevationLayer = new ElevationOverlay({
   opacity: 1,
   maxZoom: 14,
   tileSize: 256,
-  keepBuffer: 4,
+  keepBuffer: 6,
   updateWhenIdle: false,
   updateWhenZooming: false
 }).addTo(map);
-
-map.on('moveend', function() {
-  setTimeout(() => elevationLayer.redraw(), 200);
-});
 
 const slider = document.getElementById('altitude-slider');
 const display = document.getElementById('altitude-value');
@@ -501,8 +521,8 @@ function updateFromSlider(val) {
   currentAltitude = alt;
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
-    elevationLayer.redraw();
-  }, 80);
+    repaintAllTiles();
+  }, 60);
 }
 
 let debounceTimer;
@@ -521,8 +541,8 @@ opacitySlider.addEventListener('input', function() {
   opacityMultiplier = val / 100;
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
-    elevationLayer.redraw();
-  }, 80);
+    repaintAllTiles();
+  }, 60);
 });
 
 map.whenReady(() => {
