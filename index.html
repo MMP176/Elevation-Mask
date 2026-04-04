@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Español para Perú — Travel Phrasebook</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #FAF6F0;
+    --text: #2C1810;
+    --text-muted: #5C4A3A;
+    --text-light: #8B7B6B;
+    --text-faint: #A89888;
+    --card: #fff;
+    --border: #E8E0D6;
+    --serif: 'Libre Baskerville', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+  }
+
+  body {
+    font-family: var(--serif);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #D4382C 0%, #8B1A1A 100%);
+    padding: 36px 24px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.06;
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 20px, #fff 20px, #fff 22px);
+    pointer-events: none;
+  }
+  .header-inner {
+    position: relative;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .header-tag {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-size: 30px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .header p {
+    font-family: var(--sans);
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  /* CONTAINER */
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  /* SEARCH */
+  .search-wrap {
+    padding: 16px 0 8px;
+  }
+  .search-box {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .search-box .icon { font-size: 16px; opacity: 0.4; flex-shrink: 0; }
+  .search-box input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--text);
+    width: 100%;
+  }
+  .search-box input::placeholder { color: var(--text-faint); }
+  .search-clear {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #999;
+    padding: 0;
+    line-height: 1;
+    display: none;
+  }
+  .search-clear.visible { display: block; }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 0 16px;
+  }
+  .tab-btn {
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    background: var(--card);
+    color: var(--text-muted);
+  }
+  .tab-btn:hover { border-color: #ccc; }
+  .tab-btn.active {
+    color: #fff;
+    border-color: transparent;
+  }
+
+  /* CATEGORY HEADING */
+  .cat-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .cat-heading .emoji { font-size: 22px; }
+  .cat-heading h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  /* PHRASE CARD */
+  .phrase-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    border-left-width: 4px;
+    transition: box-shadow 0.15s ease;
+    user-select: none;
+  }
+  .phrase-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .phrase-card.flipped { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .phrase-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .phrase-content { flex: 1; }
+  .phrase-es {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+  .phrase-es .cat-icon { margin-right: 6px; font-size: 13px; }
+  .phrase-en {
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--text-faint);
+    line-height: 1.4;
+    transition: color 0.2s, filter 0.2s;
+    filter: blur(4px);
+  }
+  .phrase-card.flipped .phrase-en {
+    color: var(--text-muted);
+    filter: none;
+  }
+  .phrase-toggle {
+    font-family: var(--sans);
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-left: 8px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .phrase-note {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: #fff;
+    border-radius: 6px;
+    padding: 5px 10px;
+    margin-top: 10px;
+    display: none;
+    font-weight: 500;
+    opacity: 0.85;
+    width: fit-content;
+  }
+  .phrase-card.flipped .phrase-note.has-note { display: inline-block; }
+
+  /* SECTION */
+  .section { padding-bottom: 32px; }
+  .search-results-count {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+  }
+  .no-results {
+    text-align: center;
+    padding: 32px;
+    color: var(--text-light);
+    font-family: var(--sans);
+    font-size: 14px;
+  }
+
+  /* TIPS */
+  .tip-section { margin-bottom: 24px; }
+  .tip-section h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2C3E50;
+    margin-bottom: 12px;
+  }
+  .tip-card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    color: #3D2E1F;
+    border: 1px solid var(--border);
+  }
+
+  /* SPEAK BUTTON */
+  .speak-btn {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: background 0.15s, transform 0.15s;
+    flex-shrink: 0;
+    line-height: 1;
+    opacity: 0.5;
+  }
+  .speak-btn:hover { background: rgba(0,0,0,0.05); opacity: 0.8; }
+  .speak-btn:active { transform: scale(0.9); }
+  .speak-btn.speaking { opacity: 1; animation: pulse 0.8s ease infinite; }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    padding: 24px 16px 40px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text-faint);
+    border-top: 1px solid var(--border);
+    margin-top: 16px;
+  }
+
+  @media (min-width: 600px) {
+    .header { padding: 44px 32px 36px; }
+    .header h1 { font-size: 36px; }
+    .container { padding: 0 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-tag">Starter Pack</div>
+    <h1>Español para Perú</h1>
+    <p>Essential phrases & Peruvian expressions for your trip</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="search-wrap">
+    <div class="search-box">
+      <span class="icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search phrases in English or Spanish…">
+      <button class="search-clear" id="searchClear" aria-label="Clear search">✕</button>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div id="content"></div>
+</div>
+
+<div class="footer">
+  🇵🇪 ¡Buen viaje! — Safe travels in Peru
+</div>
+
+<script>
+const categories = [
+  {
+    id: "greetings", label: "Saludos", icon: "👋", color: "#D4382C",
+    phrases: [
+      { es: "¡Hola!", en: "Hello!" },
+      { es: "Buenos días", en: "Good morning" },
+      { es: "Buenas tardes", en: "Good afternoon" },
+      { es: "Buenas noches", en: "Good evening / Goodnight" },
+      { es: "¿Cómo estás?", en: "How are you?", note: "Informal" },
+      { es: "¿Cómo está usted?", en: "How are you?", note: "Formal — use with elders" },
+      { es: "Muy bien, gracias", en: "Very well, thanks" },
+      { es: "Mucho gusto", en: "Nice to meet you" },
+      { es: "¿Cómo te llamas?", en: "What's your name?" },
+      { es: "Me llamo…", en: "My name is…" },
+      { es: "Hasta luego", en: "See you later" },
+      { es: "Chau", en: "Bye", note: "Very common in Peru (from Italian 'ciao')" },
+    ]
+  },
+  {
+    id: "basics", label: "Lo Básico", icon: "💬", color: "#E8913A",
+    phrases: [
+      { es: "Sí / No", en: "Yes / No" },
+      { es: "Por favor", en: "Please" },
+      { es: "Gracias", en: "Thank you" },
+      { es: "De nada", en: "You're welcome" },
+      { es: "Disculpe", en: "Excuse me", note: "To get attention" },
+      { es: "Perdón", en: "Sorry / Pardon" },
+      { es: "No entiendo", en: "I don't understand" },
+      { es: "¿Habla inglés?", en: "Do you speak English?" },
+      { es: "No hablo mucho español", en: "I don't speak much Spanish" },
+      { es: "¿Puede repetir, por favor?", en: "Can you repeat, please?" },
+      { es: "Más despacio, por favor", en: "More slowly, please" },
+      { es: "¿Qué significa…?", en: "What does … mean?" },
+    ]
+  },
+  {
+    id: "transport", label: "Transporte", icon: "🚌", color: "#2D7D46",
+    phrases: [
+      { es: "¿Dónde está…?", en: "Where is…?" },
+      { es: "¿Cómo llego a…?", en: "How do I get to…?" },
+      { es: "Estoy perdido/a", en: "I'm lost", note: "-o (male) / -a (female)" },
+      { es: "A la derecha / izquierda", en: "To the right / left" },
+      { es: "Derecho / Recto", en: "Straight ahead" },
+      { es: "La parada de bus", en: "The bus stop" },
+      { es: "El aeropuerto", en: "The airport" },
+      { es: "Quiero ir a…", en: "I want to go to…" },
+      { es: "¿Cuánto cuesta el taxi a…?", en: "How much is the taxi to…?", note: "Always agree a price first!" },
+      { es: "¿Cuánto demora?", en: "How long does it take?", note: "Very Peruvian phrasing" },
+      { es: "Pare aquí, por favor", en: "Stop here, please" },
+      { es: "Una combi / un colectivo", en: "A minibus / shared taxi", note: "Peruvian public transport" },
+    ]
+  },
+  {
+    id: "food", label: "Comida", icon: "🍽️", color: "#8B4513",
+    phrases: [
+      { es: "La carta, por favor", en: "The menu, please" },
+      { es: "¿Qué me recomienda?", en: "What do you recommend?" },
+      { es: "Quiero probar…", en: "I'd like to try…" },
+      { es: "La cuenta, por favor", en: "The bill, please" },
+      { es: "¡Está riquísimo!", en: "It's delicious!", note: "Peruvians love hearing this" },
+      { es: "Soy vegetariano/a", en: "I'm vegetarian" },
+      { es: "Sin picante, por favor", en: "No spice, please", note: "Ají can be very hot!" },
+      { es: "Un ceviche, por favor", en: "A ceviche, please", note: "Peru's national dish" },
+      { es: "Un menú del día", en: "The set lunch", note: "Cheap & filling daily meal" },
+      { es: "¿Tiene chicha morada?", en: "Do you have purple corn drink?", note: "Must-try Peruvian drink" },
+      { es: "Un emoliente", en: "A herbal street drink", note: "Popular warm drink from carts" },
+      { es: "Provecho", en: "Enjoy your meal", note: "Said to others eating nearby" },
+    ]
+  },
+  {
+    id: "shopping", label: "Compras", icon: "🛍️", color: "#6B3FA0",
+    phrases: [
+      { es: "¿Cuánto cuesta?", en: "How much does it cost?" },
+      { es: "Muy caro", en: "Too expensive" },
+      { es: "¿Tiene algo más barato?", en: "Do you have something cheaper?" },
+      { es: "¿Me puede hacer un precio?", en: "Can you give me a deal?", note: "Haggling phrase" },
+      { es: "Me lo llevo", en: "I'll take it" },
+      { es: "Solo estoy mirando", en: "I'm just looking" },
+      { es: "¿Acepta tarjeta?", en: "Do you accept card?", note: "Cash is king outside cities" },
+      { es: "¿Tiene cambio?", en: "Do you have change?", note: "Always carry small bills" },
+      { es: "¿Tiene yapa?", en: "Any extra / freebie?", note: "Peruvian tradition — a small bonus with purchase" },
+      { es: "Una bolsa, por favor", en: "A bag, please" },
+    ]
+  },
+  {
+    id: "emergency", label: "Emergencia", icon: "🚨", color: "#C41E3A",
+    phrases: [
+      { es: "¡Ayuda!", en: "Help!" },
+      { es: "Necesito un doctor", en: "I need a doctor" },
+      { es: "Llame a la policía", en: "Call the police" },
+      { es: "Me siento mal", en: "I feel sick" },
+      { es: "Tengo soroche", en: "I have altitude sickness", note: "Very common in Cusco (3,400m)" },
+      { es: "La farmacia", en: "The pharmacy" },
+      { es: "El hospital", en: "The hospital" },
+      { es: "Soy alérgico/a a…", en: "I'm allergic to…" },
+      { es: "Mi pasaporte", en: "My passport" },
+      { es: "La embajada", en: "The embassy" },
+    ]
+  },
+  {
+    id: "culture", label: "Peruanismos", icon: "🇵🇪", color: "#1A5276",
+    phrases: [
+      { es: "¡Bacán!", en: "Cool! / Awesome!", note: "Very common Peruvian slang" },
+      { es: "Causa", en: "Friend / Buddy", note: "Also a famous potato dish!" },
+      { es: "¡Qué chévere!", en: "How cool!" },
+      { es: "Al toque", en: "Right away", note: "Though timing can be flexible…" },
+      { es: "Jato", en: "House / Home", note: "Peruvian slang" },
+      { es: "Lomo saltado", en: "Stir-fried beef dish", note: "Iconic Peruvian-Chinese fusion" },
+      { es: "Pisco sour", en: "Peru's national cocktail", note: "Don't say it's from Chile!" },
+      { es: "Inca Kola", en: "Peru's golden soda", note: "More popular than Coca-Cola" },
+      { es: "Anticucho", en: "Grilled beef heart skewer", note: "Beloved street food" },
+      { es: "Pachamama", en: "Mother Earth", note: "Sacred Andean concept" },
+    ]
+  },
+  {
+    id: "numbers", label: "Números", icon: "🔢", color: "#2C3E50",
+    phrases: [
+      { es: "Cero", en: "0" },
+      { es: "Uno", en: "1" },
+      { es: "Dos", en: "2" },
+      { es: "Tres", en: "3" },
+      { es: "Cuatro", en: "4" },
+      { es: "Cinco", en: "5" },
+      { es: "Seis", en: "6" },
+      { es: "Siete", en: "7" },
+      { es: "Ocho", en: "8" },
+      { es: "Nueve", en: "9" },
+      { es: "Diez", en: "10" },
+      { es: "Once", en: "11" },
+      { es: "Doce", en: "12" },
+      { es: "Trece", en: "13" },
+      { es: "Catorce", en: "14" },
+      { es: "Quince", en: "15" },
+      { es: "Dieciséis", en: "16" },
+      { es: "Diecisiete", en: "17" },
+      { es: "Dieciocho", en: "18" },
+      { es: "Diecinueve", en: "19" },
+      { es: "Veinte", en: "20" },
+      { es: "Treinta, cuarenta, cincuenta", en: "30, 40, 50", note: "Useful for prices" },
+      { es: "Cien, mil", en: "100, 1,000" },
+      { es: "¿Cuánto?", en: "How much? / How many?" },
+      { es: "Un sol / soles", en: "One sol / soles", note: "Peruvian currency" },
+    ]
+  }
+];
+
+const tipSections = [
+  {
+    title: "Pronunciation Tips", icon: "🗣️",
+    items: [
+      "Vowels are always the same: A (ah), E (eh), I (ee), O (oh), U (oo)",
+      "J sounds like English H — 'jato' = 'HAH-toh'",
+      "LL sounds like Y — 'llamo' = 'YAH-moh'",
+      "Ñ sounds like 'ny' — 'señor' = 'seh-NYOR'",
+      "H is always silent — 'hola' = 'OH-lah'",
+    ]
+  },
+  {
+    title: "Peru Travel Tips", icon: "🇵🇪",
+    items: [
+      "Coca tea (mate de coca) helps with altitude sickness in Cusco",
+      "Tipping: 10% at restaurants, round up for taxis",
+      "Combis (minibuses) shout destinations — listen for yours",
+      "Always agree on taxi price BEFORE getting in",
+      "Sol is the currency — carry small bills and coins",
+      "'Hora peruana' is real — expect flexible timing",
+    ]
+  }
+];
+
+let activeCategory = "greetings";
+let showTips = false;
+
+// Build tabs
+function renderTabs() {
+  const tabsEl = document.getElementById("tabs");
+  let html = "";
+  categories.forEach(cat => {
+    html += `<button class="tab-btn${activeCategory === cat.id && !showTips ? ' active' : ''}" 
+      data-id="${cat.id}" 
+      style="${activeCategory === cat.id && !showTips ? `background:${cat.color};border-color:${cat.color};color:#fff;box-shadow:0 2px 8px ${cat.color}33` : ''}"
+      onclick="selectCategory('${cat.id}')">${cat.icon} ${cat.label}</button>`;
+  });
+  html += `<button class="tab-btn${showTips ? ' active' : ''}" 
+    style="${showTips ? 'background:#2C3E50;border-color:#2C3E50;color:#fff' : ''}"
+    onclick="selectTips()">💡 Tips</button>`;
+  tabsEl.innerHTML = html;
+}
+
+function renderPhraseCard(phrase, color, iconOverride) {
+  const id = "p" + Math.random().toString(36).substr(2, 9);
+  const noteHtml = phrase.note 
+    ? `<div class="phrase-note has-note" style="background:${color}">💡 ${phrase.note}</div>` 
+    : `<div class="phrase-note"></div>`;
+  const iconSpan = iconOverride ? `<span class="cat-icon">${iconOverride}</span>` : "";
+  const safeEs = phrase.es.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+  return `<div class="phrase-card" id="${id}" onclick="toggleCard('${id}')" style="border-left-color:${color}">
+    <div class="phrase-top">
+      <div class="phrase-content">
+        <div class="phrase-es">${iconSpan}${phrase.es}</div>
+        <div class="phrase-en">${phrase.en}</div>
+      </div>
+      <button class="speak-btn" id="spk-${id}" onclick="event.stopPropagation(); speakSpanish('${safeEs}', 'spk-${id}')" aria-label="Listen to pronunciation" title="Listen">🔊</button>
+      <div class="phrase-toggle">tap ▼</div>
+    </div>
+    ${noteHtml}
+  </div>`;
+}
+
+// Text-to-Speech
+function speakSpanish(text, btnId) {
+  window.speechSynthesis.cancel();
+  const cleanText = text.replace(/\.\.\./g, '').replace(/…/g, '').replace(/\//g, ', ');
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = 'es-PE';
+  utterance.rate = 0.85;
+
+  // Try to find a Spanish voice, prefer es-PE or es-419 (Latin American)
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v => v.lang === 'es-PE')
+    || voices.find(v => v.lang === 'es-419')
+    || voices.find(v => v.lang.startsWith('es-') && v.lang !== 'es-ES')
+    || voices.find(v => v.lang.startsWith('es'));
+  if (preferred) utterance.voice = preferred;
+
+  const btn = document.getElementById(btnId);
+  if (btn) btn.classList.add('speaking');
+  utterance.onend = () => { if (btn) btn.classList.remove('speaking'); };
+  utterance.onerror = () => { if (btn) btn.classList.remove('speaking'); };
+
+  window.speechSynthesis.speak(utterance);
+}
+
+// Pre-load voices (some browsers load them async)
+window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+window.speechSynthesis.getVoices();
+
+function renderContent() {
+  const contentEl = document.getElementById("content");
+  const query = document.getElementById("searchInput").value.trim().toLowerCase();
+
+  // Search mode
+  if (query) {
+    let results = [];
+    categories.forEach(cat => {
+      cat.phrases.forEach(p => {
+        if (p.es.toLowerCase().includes(query) || p.en.toLowerCase().includes(query)) {
+          results.push({ ...p, catColor: cat.color, catIcon: cat.icon });
+        }
+      });
+    });
+    let html = `<div class="section">`;
+    html += `<div class="search-results-count">${results.length} result${results.length !== 1 ? 's' : ''}</div>`;
+    if (results.length === 0) {
+      html += `<div class="no-results">No phrases found. Try a different search term.</div>`;
+    } else {
+      results.forEach(p => { html += renderPhraseCard(p, p.catColor, p.catIcon); });
+    }
+    html += `</div>`;
+    contentEl.innerHTML = html;
+    return;
+  }
+
+  // Tips mode
+  if (showTips) {
+    let html = "";
+    tipSections.forEach(section => {
+      html += `<div class="tip-section"><h3>${section.icon} ${section.title}</h3>`;
+      section.items.forEach(item => {
+        html += `<div class="tip-card">${item}</div>`;
+      });
+      html += `</div>`;
+    });
+    contentEl.innerHTML = html;
+    return;
+  }
+
+  // Category mode
+  const cat = categories.find(c => c.id === activeCategory);
+  if (!cat) return;
+  let html = `<div class="section">
+    <div class="cat-heading">
+      <span class="emoji">${cat.icon}</span>
+      <h2 style="color:${cat.color}">${cat.label}</h2>
+    </div>`;
+  cat.phrases.forEach(p => { html += renderPhraseCard(p, cat.color); });
+  html += `</div>`;
+  contentEl.innerHTML = html;
+}
+
+function selectCategory(id) {
+  activeCategory = id;
+  showTips = false;
+  renderTabs();
+  renderContent();
+}
+
+function selectTips() {
+  showTips = true;
+  renderTabs();
+  renderContent();
+}
+
+function toggleCard(id) {
+  const card = document.getElementById(id);
+  if (!card) return;
+  card.classList.toggle("flipped");
+  const toggle = card.querySelector(".phrase-toggle");
+  if (card.classList.contains("flipped")) {
+    toggle.textContent = "▲";
+  } else {
+    toggle.textContent = "tap ▼";
+  }
+}
+
+// Search
+const searchInput = document.getElementById("searchInput");
+const searchClear = document.getElementById("searchClear");
+searchInput.addEventListener("input", () => {
+  searchClear.classList.toggle("visible", searchInput.value.length > 0);
+  renderContent();
+});
+searchClear.addEventListener("click", () => {
+  searchInput.value = "";
+  searchClear.classList.remove("visible");
+  renderContent();
+});
+
+// Init
+renderTabs();
+renderContent();
+</script>
+</body>
+</html>
